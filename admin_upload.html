@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Upload Center - Admin</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <style>
+        .upload-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-top: 20px;
+        }
+        .editor-area {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 20px;
+        }
+        textarea {
+            width: 100%;
+            height: 400px;
+            background: #000;
+            color: #00ff88;
+            font-family: 'JetBrains Mono', monospace;
+            border: 1px solid var(--border);
+            padding: 15px;
+            border-radius: 8px;
+            resize: vertical;
+            outline: none;
+        }
+        .preview-area {
+            background: white;
+            color: black;
+            border-radius: 12px;
+            padding: 20px;
+            height: 450px;
+            overflow-y: auto;
+        }
+        .input-field {
+            width: 100%;
+            padding: 12px;
+            background: #1a1a1a;
+            border: 1px solid var(--border);
+            color: white;
+            border-radius: 8px;
+            margin-bottom: 15px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="top-bar">
+        <div class="left-group">
+            <a href="index.html" style="color: white; text-decoration: none; display: flex; align-items: center; gap: 8px;">
+                <span class="material-icons">arrow_back</span> 
+                <span style="font-weight: 600;">Painel Principal</span>
+            </a>
+        </div>
+        <div style="font-weight: bold; color: var(--accent);">PUBLICAÇÃO DE CONTEÚDO</div>
+    </div>
+
+    <div class="notes-container animate-pop">
+        <div class="upload-grid">
+            <div class="editor-area">
+                <h3>🛠️ Criar/Editar Módulo</h3>
+                
+                <label style="font-size: 12px; color: var(--text-secondary);">ID DO MÓDULO (Ex: M01, M02)</label>
+                <input type="text" id="moduleId" class="input-field" placeholder="Ex: M01">
+                
+                <label style="font-size: 12px; color: var(--text-secondary);">DESCRIÇÃO BREVE</label>
+                <input type="text" id="moduleDesc" class="input-field" placeholder="Ex: Introdução à Programação">
+
+                <label style="font-size: 12px; color: var(--text-secondary);">CONTEÚDO (HTML Suportado)</label>
+                <textarea id="htmlInput" placeholder="<h1>Título</h1><p>Conteúdo aqui...</p>"></textarea>
+                
+                <button id="publishBtn" class="primary-btn" style="width: 100%; margin-top: 10px;">Publicar Agora</button>
+                <p id="status" style="text-align: center; margin-top: 10px;"></p>
+            </div>
+
+            <div>
+                <h3>👁️ Pré-visualização Real-time</h3>
+                <div id="preview" class="preview-area">
+                    <p style="color: #888;">O resultado final aparecerá aqui...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { auth, db } from './firebase.js';
+        import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+        import { doc, getDoc, setDoc, addDoc, collection } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+        // Security: Owner Only
+        onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                const u = await getDoc(doc(db, "users", user.uid));
+                if (!u.exists() || u.data().role !== 'owner') window.location.href = "index.html";
+            } else {
+                window.location.href = "login.html";
+            }
+        });
+
+        const input = document.getElementById('htmlInput');
+        const preview = document.getElementById('preview');
+
+        // Real-time Preview logic
+        input.addEventListener('input', () => {
+            preview.innerHTML = input.value || '<p style="color: #888;">O resultado aparecerá aqui...</p>';
+        });
+
+        document.getElementById('publishBtn').onclick = async () => {
+            const id = document.getElementById('moduleId').value.trim();
+            const desc = document.getElementById('moduleDesc').value.trim();
+            const content = input.value;
+            const status = document.getElementById('status');
+
+            if(!id || !content) {
+                status.style.color = "#ff4444";
+                status.innerText = "ID e Conteúdo são obrigatórios!";
+                return;
+            }
+
+            status.style.color = "var(--text-secondary)";
+            status.innerText = "A publicar...";
+
+            try {
+                await setDoc(doc(db, "modules", id), {
+                    description: desc,
+                    content: content,
+                    author: auth.currentUser.email,
+                    timestamp: new Date().toISOString()
+                });
+
+                await addDoc(collection(db, "logs"), {
+                    user: auth.currentUser.email,
+                    action: `Publicou Módulo: ${id}`,
+                    time: new Date().toLocaleString()
+                });
+
+                status.style.color = "#00ff88";
+                status.innerText = "Módulo publicado com sucesso!";
+            } catch (e) {
+                status.style.color = "#ff4444";
+                status.innerText = "Erro ao publicar: " + e.message;
+            }
+        };
+    </script>
+</body>
+</html>

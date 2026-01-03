@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Recuperar Senha - Portal TGPSI</title>
+    <link rel="stylesheet" href="auth.css">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+</head>
+<body>
+    <div class="background-text">RECUPERAR</div>
+
+    <div class="auth-box animate-pop">
+        <span class="material-icons" style="font-size: 50px; color: var(--primary-glow); margin-bottom: 10px;">restart_alt</span>
+        <h2>Recuperar Acesso</h2>
+        <p style="color: var(--text-dim); font-size: 14px; margin-bottom: 25px;">
+            Insira o seu e-mail e enviaremos um link para redefinir a sua palavra-passe.
+        </p>
+        
+        <div class="input-group">
+            <label>E-mail</label>
+            <input type="email" id="email" placeholder="seu-email@exemplo.pt">
+        </div>
+
+        <button id="resetBtn">Enviar Link de Recuperação</button>
+        
+        <p id="msg"></p>
+        
+        <div class="auth-footer">
+            <a href="login.html" style="display: flex; align-items: center; justify-content: center; gap: 5px;">
+                <span class="material-icons" style="font-size: 16px;">arrow_back</span> Voltar ao Login
+            </a>
+        </div>
+    </div>
+
+    <script type="module">
+        import { auth } from './firebase.js';
+        import { sendPasswordResetEmail } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+
+        const emailInput = document.getElementById("email");
+        const resetBtn = document.getElementById("resetBtn");
+        const msg = document.getElementById("msg");
+
+        resetBtn.addEventListener('click', async () => {
+            const email = emailInput.value.trim();
+
+            if(!email) { 
+                msg.style.color = "#ff4444";
+                msg.innerText = "Por favor, introduza o seu e-mail."; 
+                return; 
+            }
+
+            resetBtn.disabled = true;
+            resetBtn.innerText = "A enviar...";
+            msg.innerText = "";
+
+            try {
+                await sendPasswordResetEmail(auth, email);
+                msg.style.color = "#00ff88";
+                msg.innerText = "E-mail de recuperação enviado! Verifique a sua caixa de entrada.";
+                resetBtn.innerText = "Link Enviado";
+            } catch (error) {
+                resetBtn.disabled = false;
+                resetBtn.innerText = "Enviar Link de Recuperação";
+                msg.style.color = "#ff4444";
+                
+                if (error.code === 'auth/user-not-found') {
+                    msg.innerText = "Não existe nenhuma conta com este e-mail.";
+                } else if (error.code === 'auth/invalid-email') {
+                    msg.innerText = "O formato do e-mail é inválido.";
+                } else {
+                    msg.innerText = "Erro: " + error.message;
+                }
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bem-vindo - Portal Study</title>
+    <link rel="stylesheet" href="auth.css">
+    <style>
+        body { perspective: 1000px; overflow: hidden; }
+        
+        .tilt-card {
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(15px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 30px;
+            padding: 50px;
+            text-align: center;
+            transform-style: preserve-3d;
+            transition: transform 0.1s ease;
+            max-width: 450px;
+            box-shadow: 0 50px 100px rgba(0,0,0,0.5);
+        }
+
+        .data-info {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 15px;
+            padding: 15px;
+            margin: 20px 0;
+            font-size: 13px;
+            color: var(--text-dim);
+            text-align: left;
+            border: 1px solid var(--glass-border);
+            max-height: 150px;
+            overflow-y: auto;
+        }
+
+        .checkbox-container {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 25px;
+            cursor: pointer;
+            justify-content: center;
+        }
+
+        .ready-btn {
+            opacity: 0.5;
+            pointer-events: none;
+            filter: grayscale(1);
+        }
+
+        .ready-btn.active {
+            opacity: 1;
+            pointer-events: all;
+            filter: grayscale(0);
+        }
+
+        .portal-logo {
+            font-size: 50px;
+            background: linear-gradient(to right, #00c6ff, #0072ff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            font-weight: 900;
+            margin-bottom: 10px;
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <div class="background-text">ESTUDO</div>
+
+    <div class="tilt-card animate-pop" id="tiltCard">
+        <span class="portal-logo">TGPSI</span>
+        <h2>Portal de Apoio</h2>
+        <p style="color: var(--text-dim);">Bem-vindo ao centro de recursos digitais.</p>
+
+        <div class="data-info">
+            <strong>Informação de Dados:</strong><br>
+            Este portal armazena o seu email e progresso escolar de forma segura no Firebase. 
+            Não partilhamos dados com terceiros. Ao continuar, concorda com o processamento técnico necessário para o funcionamento das ferramentas de estudo.
+        </div>
+
+        <label class="checkbox-container">
+            <input type="checkbox" id="termsCheck">
+            <span>Aceito os termos e condições</span>
+        </label>
+
+        <button id="continueBtn" class="ready-btn">Entrar no Portal</button>
+    </div>
+
+    <script type="module">
+        // FIXED: Corrected import path from './firebase-config.js' to './firebase.js'
+        import { auth } from './firebase.js';
+        import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+
+        const btn = document.getElementById('continueBtn');
+        const check = document.getElementById('termsCheck');
+        const card = document.getElementById('tiltCard');
+
+        // Check if user is already logged in
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                window.location.href = "index.html";
+            }
+        });
+
+        // Toggle button state
+        check.addEventListener('change', () => {
+            if (check.checked) {
+                btn.classList.add('active');
+            } else {
+                btn.classList.remove('active');
+            }
+        });
+
+        btn.onclick = () => {
+            window.location.href = "login.html";
+        };
+
+        // 3D Tilt Effect logic
+        document.addEventListener('mousemove', (e) => {
+            let xAxis = (window.innerWidth / 2 - e.pageX) / 25;
+            let yAxis = (window.innerHeight / 2 - e.pageY) / 25;
+            card.style.transform = `rotateY(${xAxis}deg) rotateX(${yAxis}deg)`;
+        });
+    </script>
+</body>
+</html>

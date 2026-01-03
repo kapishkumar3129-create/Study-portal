@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Portal TGPSI - Dashboard</title>
+  <link rel="stylesheet" href="style.css">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+</head>
+
+<body>
+
+<div id="mySidebar" class="sidebar">
+  <div style="padding: 20px; display: flex; justify-content: flex-end;">
+    <button onclick="closeNav()" style="background:none; border:none; color:white; cursor:pointer;">
+      <span class="material-icons">close</span>
+    </button>
+  </div>
+
+  <a href="index.html" class="active"><span class="material-icons">home</span> Início</a>
+  <a href="notes.html"><span class="material-icons">edit_note</span> Caderno Digital</a>
+  
+  <div class="user-sidebar-info">
+    <span class="material-icons" style="color: var(--accent);">account_circle</span>
+    <span id="usernameDisplay">A carregar...</span>
+  </div>
+
+  <button class="dropdown-btn">💻 Consolas <span class="material-icons">expand_more</span></button>
+  <div class="dropdown-container">
+    <a href="html_editor.html" class="sub-item">🌐 Web Editor (HTML/CSS)</a>
+    <a href="#" class="sub-item">🐍 Python Playground</a>
+  </div>
+
+  <button class="dropdown-btn">📅 1º Ano TGPSI <span class="material-icons">expand_more</span></button>
+  <div class="dropdown-container">
+    <a href="#" class="sub-item">M01 - Arquitetura</a>
+    <a href="#" class="sub-item">M02 - Redes</a>
+  </div>
+
+  <div id="adminControls" style="display: none; border-top: 1px solid var(--border); margin-top: 20px;">
+    <p style="padding: 10px 25px; font-size: 11px; color: #ff4444; margin: 0;">ADMINISTRAÇÃO</p>
+    <a href="admin_console.html" id="adminLink"><span class="material-icons">admin_panel_settings</span> Consola Gestão</a>
+    <a href="admin_upload.html" id="uploadLink"><span class="material-icons">cloud_upload</span> Publicar Conteúdo</a>
+  </div>
+</div>
+
+<div id="main">
+  <div class="top-bar">
+    <div class="left-group">
+      <button class="openbtn" onclick="openNav()" style="background:none; border:none; color:white; cursor:pointer;">
+        <span class="material-icons">menu</span>
+      </button>
+      <input type="text" id="moduleSearch" placeholder="Pesquisar módulos..." class="search-bar">
+    </div>
+     
+    <div style="display: flex; align-items: center; gap: 20px;">
+      <div class="profile-container" style="position: relative;">
+        <div class="profile-circle" onclick="toggleProfile()" id="userInitial">U</div>
+        
+        <div class="profile-dropdown" id="pDropdown">
+          <div class="dropdown-user-info" style="text-align: center;">
+            <div class="profile-circle" style="margin: 0 auto 10px; width: 60px; height: 60px; font-size: 24px;" id="largeInitial">U</div>
+            <strong id="pUsername" style="display: block; font-size: 16px;">Utilizador</strong>
+            <small id="roleDisplay" style="color: var(--accent); font-weight: bold; text-transform: uppercase; font-size: 10px;">User</small>
+          </div>
+          <hr style="border: 0; border-top: 1px solid var(--border); margin: 15px 0;">
+          <button onclick="window.logout()" style="width: 100%; background: rgba(255, 68, 68, 0.1); color: #ff4444; border: 1px solid #ff4444; padding: 8px; border-radius: 6px; cursor: pointer;">Sair</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="notes-container animate-pop">
+    <header style="margin-bottom: 30px;">
+        <h1 style="margin: 0; font-size: 28px;">Bem-vindo ao Portal</h1>
+        <p style="color: var(--text-secondary);">Aceda aos seus módulos e ferramentas de aprendizagem.</p>
+    </header>
+
+    <div class="module-grid" id="moduleContainer">
+        <div class="card">
+            <div style="color: var(--accent); margin-bottom: 15px;"><span class="material-icons">info</span></div>
+            <h3>Carregando Módulos...</h3>
+            <p>A sincronizar com a base de dados...</p>
+        </div>
+    </div>
+  </div>
+</div>
+
+<script type="module" src="script.js"></script>
+
+</body>
+</html>

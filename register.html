@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Criar Conta - Portal TGPSI</title>
+    <link rel="stylesheet" href="auth.css">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+</head>
+<body>
+    <div class="background-text">REGISTO</div>
+
+    <div class="auth-box animate-pop">
+        <span class="material-icons" style="font-size: 50px; color: var(--primary-glow); margin-bottom: 10px;">person_add</span>
+        <h2>Criar Conta</h2>
+        
+        <div class="input-group">
+            <label>E-mail Institucional</label>
+            <input type="email" id="email" placeholder="exemplo@escola.pt">
+        </div>
+
+        <div class="input-group">
+            <label>Palavra-passe</label>
+            <input type="password" id="password" placeholder="••••••••">
+        </div>
+
+        <button id="regBtn">Finalizar Registo</button>
+        
+        <p id="msg"></p>
+        
+        <div class="auth-footer">
+            <span>Já tem uma conta? <a href="login.html">Faça Login</a></span>
+        </div>
+    </div>
+
+    <script type="module">
+        import { auth, db } from './firebase.js';
+        import { createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+        import { doc, setDoc, collection, addDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+        document.getElementById('regBtn').addEventListener('click', async () => {
+            const email = document.getElementById("email").value;
+            const pass = document.getElementById("password").value;
+            const msg = document.getElementById("msg");
+
+            if(!email || !pass) { 
+                msg.style.color = "#ff4444";
+                msg.innerText = "Por favor, preencha todos os campos."; 
+                return; 
+            }
+
+            if(pass.length < 6) {
+                msg.style.color = "#ff4444";
+                msg.innerText = "A senha deve ter pelo menos 6 caracteres.";
+                return;
+            }
+
+            msg.style.color = "var(--text-dim)";
+            msg.innerText = "A processar registo...";
+
+            try {
+                // 1. Create User Authentication
+                const cred = await createUserWithEmailAndPassword(auth, email, pass);
+                
+                // 2. Initialize Secure User Profile in Firestore
+                // We explicitly set role to 'user' here. 
+                // Firestore Rules should prevent users from changing this.
+                await setDoc(doc(db, "users", cred.user.uid), {
+                    email: email,
+                    role: "user",
+                    isBanned: false,
+                    joinDate: new Date().toISOString()
+                });
+
+                // 3. Log the event
+                await addDoc(collection(db, "logs"), {
+                    user: email, 
+                    action: "Novo Registo", 
+                    time: new Date().toLocaleString()
+                });
+
+                msg.style.color = "#00ff88";
+                msg.innerText = "Conta criada com sucesso! A entrar...";
+                
+                setTimeout(() => window.location.href = "index.html", 1500);
+
+            } catch (error) {
+                msg.style.color = "#ff4444";
+                if(error.code === 'auth/email-already-in-use') {
+                    msg.innerText = "Este email já está registado.";
+                } else if(error.code === 'auth/invalid-email') {
+                    msg.innerText = "O formato do email é inválido.";
+                } else {
+                    msg.innerText = "Erro: " + error.message;
+                }
+            }
+        });
+    </script>
+</body>
+</html>

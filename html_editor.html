@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Editor Web - Portal TGPSI</title>
+  <link rel="stylesheet" href="style.css">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <style>
+      .editor-container {
+          display: flex;
+          flex-direction: column;
+          height: calc(100vh - 100px);
+          gap: 15px;
+          margin-top: 10px;
+      }
+
+      .pane-header {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          padding: 8px 15px;
+          background: rgba(255, 255, 255, 0.05);
+          border-radius: 8px 8px 0 0;
+          font-size: 12px;
+          font-weight: 600;
+          color: var(--text-secondary);
+          text-transform: uppercase;
+      }
+
+      .split-view {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 15px;
+          flex-grow: 1;
+      }
+
+      .code-pane, .preview-pane {
+          display: flex;
+          flex-direction: column;
+          background: var(--bg-card);
+          border: 1px solid var(--border);
+          border-radius: 12px;
+          overflow: hidden;
+      }
+
+      textarea#codeEntry {
+          flex-grow: 1;
+          background: #0d0d0d;
+          color: #00ff88;
+          border: none;
+          padding: 20px;
+          font-family: 'JetBrains Mono', 'Fira Code', monospace;
+          font-size: 14px;
+          resize: none;
+          outline: none;
+          line-height: 1.5;
+      }
+
+      iframe#liveResult {
+          flex-grow: 1;
+          background: white;
+          border: none;
+      }
+
+      .action-bar {
+          display: flex;
+          justify-content: flex-end;
+          gap: 10px;
+          padding: 10px 0;
+      }
+
+      @media (max-width: 850px) {
+          .split-view { grid-template-columns: 1fr; }
+          .editor-container { height: auto; }
+          iframe#liveResult { height: 400px; }
+      }
+  </style>
+</head>
+<body>
+
+<div class="top-bar">
+    <div class="left-group">
+        <a href="index.html" style="color: white; text-decoration: none; display: flex; align-items: center; gap: 8px;">
+            <span class="material-icons">arrow_back</span> 
+            <span style="font-weight: 600;">Sair do Editor</span>
+        </a>
+    </div>
+    <div style="display: flex; align-items: center; gap: 10px;">
+        <span class="material-icons" style="color: var(--accent);">code</span>
+        <span style="font-weight: bold; letter-spacing: 1px;">WEB SANDBOX</span>
+    </div>
+</div>
+
+<div id="main" style="padding: 20px;">
+    <div class="notes-container animate-pop">
+        <header>
+            <h1 style="margin: 0; font-size: 22px;">Consola de Desenvolvimento</h1>
+            <p style="color: var(--text-secondary); font-size: 14px;">Escreva HTML e CSS para ver o resultado instantâneo.</p>
+        </header>
+
+        <div class="editor-container">
+            <div class="split-view">
+                <div class="code-pane">
+                    <div class="pane-header">
+                        <span class="material-icons" style="font-size: 14px;">html</span> index.html
+                    </div>
+                    <textarea id="codeEntry" spellcheck="false"><!DOCTYPE html>
+<html>
+<head>
+  <style>
+    body { 
+      font-family: sans-serif; 
+      display: flex; 
+      justify-content: center; 
+      align-items: center; 
+      height: 100vh;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+    }
+  </style>
+</head>
+<body>
+  <h1>Olá, Mundo! 🚀</h1>
+</body>
+</html></textarea>
+                </div>
+
+                <div class="preview-pane">
+                    <div class="pane-header">
+                        <span class="material-icons" style="font-size: 14px;">visibility</span> Resultado Final
+                    </div>
+                    <iframe id="liveResult"></iframe>
+                </div>
+            </div>
+
+            <div class="action-bar">
+                <button class="primary-btn" onclick="runCode()">
+                    <span class="material-icons" style="font-size: 18px; vertical-align: middle;">play_arrow</span> Executar
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script type="module">
+    import { auth } from './firebase.js';
+    import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+
+    // Protect Route
+    onAuthStateChanged(auth, (user) => {
+        if (!user) window.location.href = "login.html";
+    });
+
+    const codeEntry = document.getElementById('codeEntry');
+    const liveResult = document.getElementById('liveResult');
+
+    window.runCode = () => {
+        const content = codeEntry.value;
+        const iframeDoc = liveResult.contentDocument || liveResult.contentWindow.document;
+        iframeDoc.open();
+        iframeDoc.write(content);
+        iframeDoc.close();
+    };
+
+    // Auto-run on start
+    runCode();
+
+    // Optional: Real-time update (throttled)
+    let timeout;
+    codeEntry.addEventListener('input', () => {
+        clearTimeout(timeout);
+        timeout = setTimeout(runCode, 500);
+    });
+</script>
+
+</body>
+</html>

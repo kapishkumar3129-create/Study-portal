@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Minhas Notas - Cloud Portal</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <style>
+        .editor-wrapper {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            overflow: hidden;
+            margin-top: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+        #editor-container {
+            height: 65vh;
+            color: #e0e0e0;
+            border: none !important;
+            font-size: 16px;
+        }
+        .ql-toolbar {
+            background: #1a1a1a !important;
+            border: none !important;
+            border-bottom: 1px solid var(--border) !important;
+            padding: 12px !important;
+        }
+        .ql-stroke { stroke: #bbb !important; }
+        .ql-fill { fill: #bbb !important; }
+        .ql-picker { color: #bbb !important; }
+        
+        #save-status {
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .status-dot {
+            height: 8px;
+            width: 8px;
+            border-radius: 50%;
+            display: inline-block;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="top-bar">
+        <div class="left-group">
+            <a href="index.html" style="color: white; text-decoration: none; display: flex; align-items: center; gap: 8px;">
+                <span class="material-icons">arrow_back</span> 
+                <span style="font-weight: 600;">Voltar ao Dashboard</span>
+            </a>
+        </div>
+        <div id="save-status" style="color: var(--text-secondary);">
+            <span class="status-dot" style="background: #555;" id="statusDot"></span>
+            <span id="statusText">Sincronizado</span>
+        </div>
+    </div>
+
+    <div class="notes-container animate-pop">
+        <header style="margin-bottom: 10px;">
+            <h1 style="margin: 0; font-size: 24px;">📝 Caderno Digital</h1>
+            <p style="color: var(--text-secondary); font-size: 14px;">As suas notas são guardadas automaticamente na nuvem.</p>
+        </header>
+
+        <div class="editor-wrapper">
+            <div id="editor-container"></div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { auth, db } from './firebase.js';
+        import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+        import { doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+        // Initialize Quill Editor
+        const quill = new Quill('#editor-container', {
+            theme: 'snow',
+            placeholder: 'Comece a escrever as suas notas aqui...',
+            modules: {
+                toolbar: [
+                    [{ 'header': [1, 2, false] }],
+                    ['bold', 'italic', 'underline', 'strike'],
+                    [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+                    ['link', 'blockquote', 'code-block'],
+                    ['clean']
+                ]
+            }
+        });
+
+        let uid = null;
+        let timer;
+        const statusText = document.getElementById("statusText");
+        const statusDot = document.getElementById("statusDot");
+
+        function setStatus(type) {
+            if (type === 'saving') {
+                statusText.innerText = "A guardar...";
+                statusDot.style.background = var(--accent);
+            } else if (type === 'saved') {
+                statusText.innerText = "Guardado na Cloud";
+                statusDot.style.background = "#00ff88";
+            }
+        }
+
+        // 1. Load existing notes on Auth change
+        onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                uid = user.uid;
+                try {
+                    const snap = await getDoc(doc(db, "notes", uid));
+                    if (snap.exists()) {
+                        quill.root.innerHTML = snap.data().content;
+                    }
+                } catch (e) {
+                    console.error("Erro ao carregar notas:", e);
+                }
+            } else {
+                window.location.href = "login.html";
+            }
+        });
+
+        // 2. Debounced Auto-Save
+        quill.on('text-change', () => {
+            if(!uid) return;
+            
+            setStatus('saving');
+            clearTimeout(timer);
+            
+            timer = setTimeout(async () => {
+                try {
+                    await setDoc(doc(db, "notes", uid), { 
+                        content: quill.root.innerHTML,
+                        lastUpdate: new Date().toISOString()
+                    });
+                    setStatus('saved');
+                } catch (e) {
+                    statusText.innerText = "Erro ao guardar";
+                    statusDot.style.background = "#ff4444";
+                }
+            }, 1500); // Wait 1.5s after typing stops to save
+        });
+    </script>
+
+    <script src="https://cdn.quilljs.com/1.3.6/quill.min.js"></script>
+</body>
+</html>
