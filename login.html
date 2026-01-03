@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Portal TGPSI</title>
+    <link rel="stylesheet" href="auth.css">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+</head>
+<body>
+    <div class="background-text">LOGIN</div>
+
+    <div class="auth-box animate-pop" id="loginBox">
+        <span class="material-icons" style="font-size: 50px; color: var(--primary-glow); margin-bottom: 10px;">lock_person</span>
+        <h2>Área Restrita</h2>
+        
+        <div class="input-group">
+            <label>E-mail</label>
+            <input type="email" id="email" placeholder="utilizador@escola.pt" required>
+        </div>
+
+        <div class="input-group">
+            <label>Palavra-passe</label>
+            <input type="password" id="password" placeholder="••••••••" required>
+        </div>
+
+        <button id="loginBtn">Entrar no Sistema</button>
+        
+        <p id="msg"></p>
+        
+        <div class="auth-footer">
+            <a href="forgot.html">Esqueceu-se da senha?</a><br><br>
+            <span>Não tem conta? <a href="register.html">Registe-se aqui</a></span>
+        </div>
+    </div>
+
+    <script type="module">
+        import { auth } from './firebase.js';
+        import { signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+
+        const loginBtn = document.getElementById('loginBtn');
+        const emailInput = document.getElementById('email');
+        const passInput = document.getElementById('password');
+        const msg = document.getElementById('msg');
+        const loginBox = document.getElementById('loginBox');
+
+        loginBtn.addEventListener('click', async () => {
+            const email = emailInput.value;
+            const pass = passInput.value;
+
+            if(!email || !pass) {
+                showError("Preencha todos os campos.");
+                return;
+            }
+
+            loginBtn.disabled = true;
+            loginBtn.innerText = "A autenticar...";
+            msg.style.color = "var(--text-dim)";
+            msg.innerText = "A verificar credenciais...";
+
+            try {
+                await signInWithEmailAndPassword(auth, email, pass);
+                msg.style.color = "#00ff88";
+                msg.innerText = "Sucesso! A redirecionar...";
+                
+                // Smooth transition to dashboard
+                setTimeout(() => {
+                    window.location.href = "index.html";
+                }, 1000);
+
+            } catch (error) {
+                loginBtn.disabled = false;
+                loginBtn.innerText = "Entrar no Sistema";
+                
+                // Visual feedback for error
+                loginBox.classList.add('shake');
+                setTimeout(() => loginBox.classList.remove('shake'), 500);
+
+                if (error.code === 'auth/invalid-credential') {
+                    showError("E-mail ou senha incorretos.");
+                } else if (error.code === 'auth/user-disabled') {
+                    showError("Esta conta foi desativada.");
+                } else {
+                    showError("Erro ao entrar. Tente novamente.");
+                }
+            }
+        });
+
+        function showError(text) {
+            msg.style.color = "#ff4444";
+            msg.innerText = text;
+        }
+
+        // Allow "Enter" key to trigger login
+        [emailInput, passInput].forEach(input => {
+            input.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') loginBtn.click();
+            });
+        });
+    </script>
+
+    <style>
+        /* Shake animation for errors */
+        .shake {
+            animation: shake 0.5s cubic-bezier(.36,.07,.19,.97) both;
+        }
+        @keyframes shake {
+            10%, 90% { transform: translate3d(-1px, 0, 0); }
+            20%, 80% { transform: translate3d(2px, 0, 0); }
+            30%, 50%, 70% { transform: translate3d(-4px, 0, 0); }
+            40%, 60% { transform: translate3d(4px, 0, 0); }
+        }
+    </style>
+</body>
+</html>
