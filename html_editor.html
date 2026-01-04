@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+  <meta charset="UTF-8">
+  <title>Consola - Portal de Estudo</title>
+  <link rel="stylesheet" href="style.css">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <style>
+      iframe { width: 100%; height: 500px; border: 1px solid var(--border-color); border-radius: 8px; background: white; }
+  </style>
+</head>
+<body>
+
+<div class="top-bar">
+    <a href="index.html" style="color: var(--text-color); text-decoration: none; display: flex; align-items: center; gap: 5px;">
+        <span class="material-icons">arrow_back</span> Voltar
+    </a>
+    <h3 style="margin:0;">HTML/CSS Editor</h3>
+    <button id="theme-toggle" class="theme-btn" onclick="toggleTheme()">🌙</button>
+</div>
+
+<div class="notes-container">
+    <iframe src="https://onecompiler.com/html" frameborder="0"></iframe>
+</div>
+
+<script type="module" src="script.js"></script>
+
+</body>
+</html>
